@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: flowtrace-agent
+  labels:
+    app: flowtrace-agent
+spec:
+  selector:
+    matchLabels:
+      app: flowtrace-agent
+  template:
+    metadata:
+      labels:
+        app: flowtrace-agent
+    spec:
+      # let the pod see host interfaces
+      hostNetwork: true
+      # allow raw socket
+      securityContext:
+        runAsUser: 0
+      containers:
+      - name: flowtrace-agent
+        image: flowtrace-agent:latest
+        args:
+          # these are the same defaults you baked into your Dockerfile
+          - enp0s3
+          - tcp port 80 or tcp port 443 or icmp
+        # give NET_RAW so libpcap works
+        securityContext:
+          capabilities:
+            add: ["NET_RAW","NET_ADMIN"]
+        volumeMounts:
+        # optional if you want host CSV file persistency:
+        - name: host-csv
+          mountPath: /app/packets.csv
+          subPath: packets.csv
+      volumes:
+      # optional hostPath for persisting CSV
+      - name: host-csv
+        hostPath:
+          path: /var/log/flowtrace/packets.csv
+          type: FileOrCreate
+      # restart automatically
+      restartPolicy: Always

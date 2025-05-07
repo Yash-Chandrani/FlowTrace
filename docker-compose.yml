@@ -1,0 +1,6 @@
+version: "3.8"
+services:
+  flowtrace:
+    build: .
+    network_mode: host   # so the agent sees enp0s3
+    # no restart:, just run once
